@@ -687,7 +687,7 @@ function renderSustain(p){
       <div class="lbl" style="color:${col}">Por plan: ¿cuanto poner en preventa para que la renta cubra la hipoteca?</div>
       <p style="font-size:.68rem;color:var(--m);margin-bottom:.4rem;line-height:1.5">Si la contraentrega es mayor a ${F(maxMort)}, necesitas pagar el excedente durante la preventa. Asi reduces la hipoteca hasta que la renta la cubra.</p>
 
-      <table class="tbl"><tr><th>Plan</th><th>Precio</th><th>Contra original</th><th>Contra → hipoteca</th><th>Extra a poner</th><th>Capital preventa</th><th>Pago hip/mes</th><th>Flujo mensual</th></tr>`;
+      <table class="tbl"><tr><th>Plan</th><th>Precio</th><th>Contra original</th><th>Contra → hipoteca</th><th>Extra a poner</th><th>Capital preventa</th></tr>`;
 
     for(const pk of PKS){
       const pl=unit.pl[pk];
@@ -696,8 +696,7 @@ function renderSustain(p){
 
       if(pl.c<=0){
         h+=`<tr><td><b>${pl.lb}</b></td><td>${F(pl.p)}</td><td>$0</td><td>N/A</td><td style="color:var(--m)">$0</td>
-          <td style="font-weight:700">${F(capitalOrig)}</td><td>N/A</td>
-          <td style="color:var(--g)">+${F(disponible)}/mes</td></tr>`;
+          <td style="font-weight:700">${F(capitalOrig)}</td></tr>`;
         continue;
       }
 
@@ -716,8 +715,6 @@ function renderSustain(p){
         <td style="color:var(--y)">${F(newContra)}</td>
         <td style="color:${needsExtra?'var(--o)':'var(--g)'};font-weight:700">${needsExtra?F(extra)+' (+'+F(extraMSI)+'/mes)':'$0'}</td>
         <td style="color:var(--ac);font-weight:700">${F(newCapital)}</td>
-        <td>${F(hipMoNew)}</td>
-        <td style="color:${flowMo>=0?'var(--g)':'var(--r)'}; font-weight:700">${flowMo>=0?'+':''}${F(flowMo)}/mes</td>
       </tr>`;
     }
 
@@ -729,121 +726,6 @@ function renderSustain(p){
           ${disponible>0?'<br><b>'+F(disponible)+'/mes</b> es lo que la renta puede cubrir despues de vacancia y mantenimiento. Eso soporta una hipoteca de hasta <b>'+F(maxMort)+'</b>.':'<br><span style="color:var(--r)"><b>La renta no cubre ni el mantenimiento.</b> No es viable autofinanciar con renta.</span>'}
         </p>
       </div>`;
-
-    // ---- LINE CHART: Property Value + Cap Rate over years ----
-    const W=600,H=260,pad={t:30,r:70,b:40,l:80};
-    const cW=W-pad.l-pad.r, cH=H-pad.t-pad.b;
-
-    // Data points: year 0 to 20 (rent grows with inflation)
-    const pts=[];
-    for(let y=0;y<=years;y++){
-      const val=unit.list*Math.pow(1+p.apprY,y);
-      const rentY=rentNetAnnual*Math.pow(1+p.rentInfl,y);
-      const capRate=val>0?rentY/val:0;
-      pts.push({y,val,capRate,rentY});
-    }
-
-    const maxVal=Math.max(...pts.map(p=>p.val));
-    const minVal=Math.min(...pts.map(p=>p.val));
-    const maxCR=Math.max(...pts.map(p=>p.capRate));
-    const minCR=Math.min(...pts.map(p=>p.capRate));
-
-    const xScale=y=>pad.l+(y/years)*cW;
-    const yScaleVal=v=>pad.t+cH-(v-minVal*0.9)/(maxVal*1.05-minVal*0.9)*cH;
-    const yScaleCR=cr=>pad.t+cH-(cr-minCR*0.8)/(maxCR*1.1-minCR*0.8)*cH;
-
-    // Build SVG paths
-    let pathVal='M';
-    let pathCR='M';
-    for(let i=0;i<pts.length;i++){
-      const x=xScale(pts[i].y);
-      pathVal+=(i?'L':'')+x.toFixed(1)+','+yScaleVal(pts[i].val).toFixed(1);
-      pathCR+=(i?'L':'')+x.toFixed(1)+','+yScaleCR(pts[i].capRate).toFixed(1);
-    }
-
-    // Y-axis labels for value (5 ticks)
-    let yLabelsVal='';
-    for(let i=0;i<=4;i++){
-      const v=minVal*0.9+(maxVal*1.05-minVal*0.9)*i/4;
-      const yy=pad.t+cH-cH*i/4;
-      yLabelsVal+=`<text x="${pad.l-8}" y="${yy+3}" text-anchor="end" fill="#64748b" font-size="9">${(v/1e6).toFixed(1)}M</text>`;
-      yLabelsVal+=`<line x1="${pad.l}" y1="${yy}" x2="${W-pad.r}" y2="${yy}" stroke="#e2e8f0" stroke-dasharray="3"/>`;
-    }
-
-    // Y-axis labels for cap rate (right side, 5 ticks)
-    let yLabelsCR='';
-    for(let i=0;i<=4;i++){
-      const cr=minCR*0.8+(maxCR*1.1-minCR*0.8)*i/4;
-      const yy=pad.t+cH-cH*i/4;
-      yLabelsCR+=`<text x="${W-pad.r+8}" y="${yy+3}" text-anchor="start" fill="${uk==='ceiba'?'#5b4dc7':'#0a9988'}" font-size="9">${(cr*100).toFixed(1)}%</text>`;
-    }
-
-    // X-axis labels
-    let xLabels='';
-    for(let y=0;y<=years;y+=5){
-      const x=xScale(y);
-      xLabels+=`<text x="${x}" y="${H-pad.b+18}" text-anchor="middle" fill="#64748b" font-size="9">Año ${y}</text>`;
-      xLabels+=`<line x1="${x}" y1="${pad.t}" x2="${x}" y2="${H-pad.b}" stroke="#e2e8f0" stroke-dasharray="3"/>`;
-    }
-
-    // Key data points as dots
-    let dotsVal='', dotsCR='';
-    for(let y=0;y<=years;y+=5){
-      const x=xScale(y);
-      dotsVal+=`<circle cx="${x}" cy="${yScaleVal(pts[y].val)}" r="3.5" fill="var(--y)" stroke="white" stroke-width="1.5"/>`;
-      dotsVal+=`<text x="${x}" y="${yScaleVal(pts[y].val)-8}" text-anchor="middle" fill="var(--y)" font-size="8" font-weight="700">${F(pts[y].val)}</text>`;
-      dotsCR+=`<circle cx="${x}" cy="${yScaleCR(pts[y].capRate)}" r="3.5" fill="${col}" stroke="white" stroke-width="1.5"/>`;
-      dotsCR+=`<text x="${x}" y="${yScaleCR(pts[y].capRate)+14}" text-anchor="middle" fill="${col}" font-size="8" font-weight="700">${(pts[y].capRate*100).toFixed(2)}%</text>`;
-    }
-
-    h+=`<div class="lbl" style="color:${col};margin-top:1.2rem">Valor de la propiedad y Cap Rate a ${years} años</div>
-      <p style="font-size:.68rem;color:var(--m);margin-bottom:.5rem">Linea naranja = valor de la propiedad (plusvalia ${PI(p.apprY)}/año). Linea ${uk==='ceiba'?'morada':'verde'} = Cap Rate (renta neta / valor). La renta crece con inflacion al ${PI(p.rentInfl)}/año.</p>
-      <div style="overflow-x:auto">
-      <svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:${W}px;height:auto;font-family:system-ui,sans-serif">
-        ${yLabelsVal}${yLabelsCR}${xLabels}
-        <!-- Axes -->
-        <line x1="${pad.l}" y1="${pad.t}" x2="${pad.l}" y2="${H-pad.b}" stroke="#94a3b8" stroke-width="1"/>
-        <line x1="${pad.l}" y1="${H-pad.b}" x2="${W-pad.r}" y2="${H-pad.b}" stroke="#94a3b8" stroke-width="1"/>
-        <line x1="${W-pad.r}" y1="${pad.t}" x2="${W-pad.r}" y2="${H-pad.b}" stroke="#94a3b8" stroke-width="1"/>
-        <!-- Value line -->
-        <path d="${pathVal}" fill="none" stroke="var(--y)" stroke-width="2.5" stroke-linecap="round"/>
-        ${dotsVal}
-        <!-- Cap Rate line -->
-        <path d="${pathCR}" fill="none" stroke="${col}" stroke-width="2" stroke-dasharray="6,3" stroke-linecap="round"/>
-        ${dotsCR}
-        <!-- Legend -->
-        <rect x="${pad.l+10}" y="${pad.t+2}" width="10" height="3" rx="1" fill="var(--y)"/>
-        <text x="${pad.l+24}" y="${pad.t+6}" fill="var(--y)" font-size="8">Valor propiedad</text>
-        <line x1="${pad.l+110}" y1="${pad.t+4}" x2="${pad.l+120}" y2="${pad.t+4}" stroke="${col}" stroke-width="2" stroke-dasharray="4,2"/>
-        <text x="${pad.l+124}" y="${pad.t+6}" fill="${col}" font-size="8">Cap Rate</text>
-      </svg></div>
-
-      <div style="margin-top:.5rem;overflow-x:auto">
-        <table class="tbl" style="font-size:.7rem"><tr><th>Año</th><th>Valor propiedad</th><th>Renta neta anual</th><th>Cap Rate</th><th>Plusvalia acumulada</th></tr>`;
-
-    for(let y=0;y<=years;y+=1){
-      const pt=pts[y];
-      const plusv=pt.val-unit.list;
-      const show=y<=5||y%5===0;
-      if(show) h+=`<tr${y===0?' style="background:var(--c2)"':''}>
-        <td><b>${y}</b></td>
-        <td>${F(pt.val)}</td>
-        <td>${F(pt.rentY)}</td>
-        <td style="color:${col};font-weight:700">${(pt.capRate*100).toFixed(2)}%</td>
-        <td style="color:${plusv>=0?'var(--g)':'var(--r)'}">${plusv>=0?'+':''}${F(plusv)} (${plusv>=0?'+':''}${((plusv/unit.list)*100).toFixed(1)}%)</td>
-      </tr>`;
-    }
-
-    h+=`</table></div>
-
-      <div style="margin-top:.6rem;padding:.5rem;background:var(--c2);border-radius:6px;border-left:3px solid var(--y)">
-        <p style="font-size:.7rem;color:var(--m);line-height:1.6">
-          <b style="color:var(--t)">¿Que es el Cap Rate?</b> Es la renta neta anual dividida entre el valor actual de la propiedad. Mide el rendimiento puro de la renta sin considerar hipoteca.
-          Hoy: <b style="color:${col}">${(pts[0].capRate*100).toFixed(2)}%</b> → En 20 años: <b style="color:${col}">${(pts[years].capRate*100).toFixed(2)}%</b>.
-          La renta crece al ${PI(p.rentInfl)}/año (de ${F(pts[0].rentY)} a ${F(pts[years].rentY)}/año).
-          <br>La propiedad pasa de <b>${F(unit.list)}</b> a <b style="color:var(--g)">${F(pts[years].val)}</b> — plusvalia de <b style="color:var(--g)">+${F(pts[years].val-unit.list)}</b>.
-        </p>
-      </div>
 
     </div></div>`;
   }
