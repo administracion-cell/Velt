@@ -1,0 +1,954 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Anarama VELT - Flip Analysis</title>
+<style>
+:root{--bg:#f5f7fa;--c1:#ffffff;--c2:#eef1f6;--ac:#5b4dc7;--ac2:#0a9988;--g:#16a34a;--r:#dc2626;--y:#b45309;--o:#ea580c;--t:#1e293b;--m:#64748b;--b:#d1d5db}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,sans-serif;background:var(--bg);color:var(--t);line-height:1.5}
+.hero{background:linear-gradient(135deg,#f0edff,#e0f7f5 40%,#f5f7fa);padding:1.5rem 2rem 1rem;text-align:center;border-bottom:1px solid var(--b)}
+.hero h1{font-size:1.6rem;font-weight:800;background:linear-gradient(90deg,var(--ac),var(--ac2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero .sub{color:var(--m);font-size:.8rem;margin-top:.2rem}
+.tags{display:flex;gap:.3rem;justify-content:center;flex-wrap:wrap;margin-top:.6rem}
+.tag{background:var(--c2);border:1px solid var(--b);border-radius:14px;padding:.15rem .6rem;font-size:.65rem;color:var(--ac2)}
+.wrap{max-width:1440px;margin:0 auto;padding:1rem 1.5rem 2rem}
+
+/* RECOMMENDATION */
+.reco{border-radius:12px;padding:1.2rem;margin-bottom:1.2rem;border:2px solid var(--g);background:linear-gradient(135deg,rgba(22,163,74,.06),rgba(91,77,199,.04))}
+.reco h2{font-size:.75rem;text-transform:uppercase;letter-spacing:1px;color:var(--g);margin-bottom:.5rem}
+.reco-main{display:flex;align-items:baseline;gap:.8rem;flex-wrap:wrap}
+.reco-main .winner-name{font-size:1.4rem;font-weight:900;color:var(--y)}
+.reco-main .winner-plan{font-size:1rem;font-weight:700;color:var(--g)}
+.reco-main .winner-roi{font-size:2rem;font-weight:900;color:var(--g)}
+.reco-detail{margin-top:.5rem;font-size:.78rem;color:var(--m);line-height:1.6}
+.reco-detail b{color:var(--t)}
+.reco-compare{display:grid;grid-template-columns:1fr 1fr;gap:1rem;margin-top:.8rem}
+@media(max-width:700px){.reco-compare{grid-template-columns:1fr}}
+.reco-card{background:var(--c2);border-radius:8px;padding:.8rem;position:relative}
+.reco-card.is-best{border:1px solid var(--g)}
+.reco-card .rc-name{font-size:.9rem;font-weight:700;margin-bottom:.3rem}
+.reco-card .rc-row{display:flex;justify-content:space-between;font-size:.75rem;padding:.15rem 0}
+.reco-card .rc-row .k{color:var(--m)}.reco-card .rc-row .v{font-weight:600}
+.best-tag{position:absolute;top:-.5rem;right:.5rem;background:var(--g);color:#fff;font-size:.55rem;font-weight:800;padding:.1rem .5rem;border-radius:6px}
+
+/* CONTROLS */
+.ctrls{background:var(--c1);border:1px solid var(--b);border-radius:10px;padding:1rem;margin-bottom:.5rem}
+.ctrls h3{font-size:.75rem;margin-bottom:.5rem;color:var(--ac2);text-transform:uppercase;letter-spacing:.5px}
+.cg{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:.5rem}
+.ci{display:flex;flex-direction:column;gap:.1rem}
+.ci label{font-size:.62rem;color:var(--m);text-transform:uppercase;letter-spacing:.3px}
+.ci .v{font-size:.85rem;font-weight:700;color:var(--y)}
+input[type=range]{-webkit-appearance:none;width:100%;height:5px;border-radius:3px;background:#cbd5e1;outline:none;margin:.15rem 0}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:14px;height:14px;border-radius:50%;background:var(--ac);cursor:pointer;border:2px solid #fff;box-shadow:0 1px 3px rgba(0,0,0,.2)}
+select{background:#fff;color:var(--t);border:1px solid var(--b);border-radius:6px;padding:.3rem .5rem;font-size:.75rem;width:100%;cursor:pointer}
+.ctrl-sep{margin:.8rem 0;border-top:1px solid var(--b)}
+
+/* TABS */
+.tabs{display:flex;gap:0;margin:.8rem 0 1.2rem;border-radius:8px;overflow:hidden}
+.tab{flex:1;padding:.55rem;text-align:center;background:var(--c1);border:1px solid var(--b);cursor:pointer;font-size:.78rem;transition:.2s;font-weight:500}
+.tab:first-child{border-radius:8px 0 0 8px}
+.tab:last-child{border-radius:0 8px 8px 0}
+.tab.active{background:var(--ac);border-color:var(--ac);color:#fff;font-weight:700}
+.tab:hover:not(.active){background:var(--c2)}
+
+/* SPLIT */
+.split{display:grid;grid-template-columns:1fr 1fr;gap:1.2rem}
+@media(max-width:900px){.split{grid-template-columns:1fr}}
+.card{background:var(--c1);border:1px solid var(--b);border-radius:10px;overflow:hidden;box-shadow:0 1px 4px rgba(0,0,0,.06)}
+.ch{padding:.6rem 1rem;display:flex;justify-content:space-between;align-items:center}
+.ch.ceiba{background:linear-gradient(90deg,rgba(91,77,199,.08),transparent)}
+.ch.cedro{background:linear-gradient(90deg,rgba(10,153,136,.08),transparent)}
+.ch .tt{font-size:1.05rem;font-weight:700}
+.bsm{font-size:.6rem;padding:.12rem .4rem;border-radius:5px;font-weight:700}
+.bw{background:var(--g);color:#000}.ba{background:var(--c2);color:var(--m)}
+.cb{padding:.8rem 1rem}
+.specs{display:grid;grid-template-columns:repeat(4,1fr);gap:.3rem;margin-bottom:.6rem}
+.sp{text-align:center;background:var(--c2);border-radius:5px;padding:.3rem}
+.sp .n{font-size:.9rem;font-weight:700}.sp .l{font-size:.55rem;color:var(--m);text-transform:uppercase}
+.rw{display:flex;justify-content:space-between;padding:.22rem 0;font-size:.76rem;border-bottom:1px solid rgba(0,0,0,.04)}
+.rw:last-child{border:none}
+.rw .k{color:var(--m)}.rw .v{font-weight:600}
+.lbl{font-size:.66rem;text-transform:uppercase;letter-spacing:.4px;font-weight:700;margin:.5rem 0 .15rem}
+.mets{display:grid;grid-template-columns:repeat(auto-fit,minmax(95px,1fr));gap:.35rem;margin:.4rem 0}
+.met{background:var(--c2);border-radius:6px;padding:.45rem;text-align:center}
+.met .mv{font-size:1rem;font-weight:800}.met .ml{font-size:.52rem;color:var(--m);text-transform:uppercase;margin-top:.1rem}
+.pbar{height:24px;border-radius:5px;overflow:hidden;display:flex;margin:.3rem 0}
+.pbar div{display:flex;align-items:center;justify-content:center;font-size:.55rem;font-weight:700;color:#fff;transition:width .3s}
+.seg-a{background:var(--ac)}.seg-m{background:#d97706}.seg-c{background:#94a3b8}
+
+.tbl{width:100%;border-collapse:collapse;font-size:.73rem;margin:.4rem 0}
+.tbl th{text-align:left;padding:.35rem .5rem;background:var(--c2);color:var(--m);font-size:.63rem;text-transform:uppercase;letter-spacing:.3px}
+.tbl td{padding:.35rem .5rem;border-bottom:1px solid #e2e8f0}
+.tbl tr:hover td{background:rgba(91,77,199,.04)}
+.tbl .best{color:var(--g);font-weight:700}
+
+.insights{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:.7rem;margin:.6rem 0}
+.ins{background:var(--c2);border-radius:8px;padding:.7rem;border-left:3px solid var(--ac)}
+.ins.top{border-left-color:var(--g)}.ins.warn{border-left-color:var(--o)}.ins.info{border-left-color:var(--ac2)}
+.ins h4{font-size:.78rem;margin-bottom:.15rem}.ins p{font-size:.7rem;color:var(--m)}.ins .num{font-size:1.1rem;font-weight:800;color:var(--y);margin:.15rem 0}
+
+.sec{margin-bottom:1.2rem}
+.sec h2{font-size:.88rem;font-weight:700;margin-bottom:.5rem;padding-bottom:.3rem;border-bottom:1px solid var(--b)}
+.hidden{display:none}
+.foot{text-align:center;padding:1rem;color:var(--m);font-size:.6rem;border-top:1px solid var(--b);margin-top:1rem}
+</style>
+</head>
+<body>
+<div class="hero">
+  <h1>Comparador de Inversion - Anarama VELT</h1>
+  <div class="sub">Torre VELT | Cd. Granja, Zapopan | Grupo Vatersohn | Frente al Parque Metropolitano</div>
+  <div class="tags">
+    <span class="tag">Preventa Mar 2026</span><span class="tag">Entrega ~Abr 2028</span>
+    <span class="tag">Torre Sehn: 90% vendida 22 meses</span><span class="tag">Fideicomiso BIM</span>
+    <span class="tag">Ceiba renta $22K</span><span class="tag">Cedro renta $18K</span><span class="tag">Airbnb $1,200/noche</span>
+  </div>
+</div>
+<div class="wrap">
+
+<!-- CONTROLS: Separated by category -->
+<div class="ctrls">
+  <h3>Mercado y venta</h3>
+  <div class="cg">
+    <div class="ci"><label>Apreciacion anual del inmueble</label><input type="range" id="apprY" min="0" max="30" value="12" step="0.5"><span class="v" id="apprY-v"></span></div>
+    <div class="ci"><label>Meses post-entrega para vender</label><input type="range" id="mSell" min="0" max="24" value="3" step="1"><span class="v" id="mSell-v"></span></div>
+    <div class="ci"><label>Comision del agente inmobiliario</label><input type="range" id="comAgent" min="0" max="6" value="3" step="0.5"><span class="v" id="comAgent-v"></span></div>
+    <div class="ci"><label>ISR por venta</label><input type="range" id="isr" min="0" max="10" value="3" step="0.5"><span class="v" id="isr-v"></span></div>
+    <div class="ci"><label>Gastos notariales y escrituracion</label><input type="range" id="notario" min="0" max="5" value="2" step="0.5"><span class="v" id="notario-v"></span></div>
+    <div class="ci"><label>Inflacion anual de renta</label><input type="range" id="rentInfl" min="0" max="15" value="5" step="0.5"><span class="v" id="rentInfl-v"></span></div>
+  </div>
+  <div class="ctrl-sep"></div>
+  <h3>Credito hipotecario (para contraentrega)</h3>
+  <div class="cg">
+    <div class="ci"><label>Contraentrega: como la pagas?</label>
+      <select id="contraMode"><option value="hip">Credito hipotecario</option><option value="cash">De contado</option></select>
+    </div>
+    <div class="ci"><label>Tasa anual del credito</label><input type="range" id="hipRate" min="8" max="18" value="12" step="0.25"><span class="v" id="hipRate-v"></span></div>
+    <div class="ci"><label>Comision por apertura</label><input type="range" id="hipCom" min="0" max="5" value="1" step="0.25"><span class="v" id="hipCom-v"></span></div>
+  </div>
+  <select id="pC" style="display:none"><option value="auto" selected></option></select>
+  <select id="pD" style="display:none"><option value="auto" selected></option></select>
+</div>
+
+<div class="tabs">
+  <div class="tab active" data-tab="deep" onclick="go('deep')">Analisis Flip</div>
+  <div class="tab" data-tab="depas" onclick="go('depas')">Departamentos</div>
+  <div class="tab" data-tab="opcost" onclick="go('opcost')">Costo de Oportunidad</div>
+  <div class="tab" data-tab="sustain" onclick="go('sustain')">Renta = Hipoteca</div>
+</div>
+
+<div id="tab-depas" class="hidden"><div class="split" id="splitV"></div></div>
+<div id="tab-opcost" class="hidden"><div id="opcostV"></div></div>
+<div id="tab-sustain" class="hidden"><div class="split" id="sustainV"></div></div>
+
+<div id="tab-deep">
+  <div class="reco" id="reco"></div>
+  <div class="sec">
+    <h2>Los 6 planes de pago — ¿que significa cada uno?</h2>
+    <p style="font-size:.75rem;color:var(--m);margin-bottom:.8rem">Todos los planes son para el mismo depa. La diferencia es cuanto pagas de enganche y mensualidades durante la preventa (25 meses), y que descuento te dan a cambio. El resto (contraentrega) se paga al recibir el depa.</p>
+    <div style="overflow-x:auto"><table class="tbl" id="planGuideTbl"></table></div>
+  </div>
+  <div class="sec">
+    <h2>Guia rapida: ¿que plan te conviene segun el escenario?</h2>
+    <p style="font-size:.75rem;color:var(--m);margin-bottom:.5rem">Para cada nivel de apreciacion, te dice cual plan/depa te da el mejor ROI y cuanta ganancia. Asi sabes rapidamente: si creo que la plusvalia sera X%, me conviene el plan Y.</p>
+    <div style="overflow-x:auto"><table class="tbl" id="guideTbl"></table></div>
+  </div>
+  <div class="sec"><h2>Hallazgos Clave</h2><div class="insights" id="ins"></div></div>
+  <div class="sec">
+    <h2>Todos los planes x ambos depas</h2>
+    <p style="font-size:.7rem;color:var(--m);margin-bottom:.4rem">ROI = Ganancia neta / Dinero total de tu bolsa. Con hipoteca: anticipo + mensualidades + com. apertura + pagos hip. durante venta. Los costos de venta se desglosan: comision agente + ISR + notario.</p>
+    <div style="overflow-x:auto"><table class="tbl" id="matTbl"></table></div>
+  </div>
+  <div class="sec"><h2>Break-even: Apreciacion minima para no perder</h2>
+    <p style="font-size:.75rem;color:var(--m);margin-bottom:.5rem;line-height:1.5">Cada plan tiene un descuento distinto. Los costos de venta (agente + ISR + notario) se comen parte de ese descuento. Esta tabla te dice: <b>¿cuanta plusvalia minima necesitas para que la ganancia sea positiva?</b> Si el mercado sube mas que ese %, ganas. Si sube menos, pierdes. Ordenado de mas seguro (arriba) a mas riesgoso (abajo).</p>
+    <div style="overflow-x:auto"><table class="tbl" id="beTbl"></table></div>
+  </div>
+  <div class="sec"><h2>Cascada del flip: ¿como se ve tu dinero paso a paso?</h2>
+    <p style="font-size:.72rem;color:var(--m);margin-bottom:.6rem">Con el mejor plan segun tus parametros. Cada barra muestra cuanto sale (rojo) o entra (verde). El resultado final es tu ganancia neta.</p>
+    <div class="split" id="waterfallV"></div>
+  </div>
+</div>
+
+<div class="foot">Analisis generado 8 Mar 2026 | Proyecciones estimadas | Anarama VELT - Grupo Vatersohn</div>
+</div>
+
+<script>
+const MSI=31,PRE=25;
+const U={
+  ceiba:{nm:'Ceiba 5H',m2:58.59,m2i:56.70,rm:2,ba:1.5,pk:1,or:'Oeste',list:4376368.03,rent:22000,
+    pl:{
+      planA:{lb:'Plan A',d:.015,p:4310722.51,aP:.11,a:474179.48,mP:.16,m:22248.89,cP:.73,c:3146827.43},
+      planB:{lb:'Plan B',d:.035,p:4223195.15,aP:.17,a:717943.18,mP:.10,m:13623.21,cP:.73,c:3082932.46},
+      contadoA:{lb:'Contado A',d:.10,p:3938731.23,aP:.50,a:1969365.61,mP:0,m:0,cP:.50,c:1969365.61},
+      contadoB:{lb:'Contado B',d:.18,p:3588621.79,aP:1,a:3588621.79,mP:0,m:0,cP:0,c:0},
+      promoINVAL:{lb:'Promo INVAL',d:0,p:4376368.03,aP:.10,a:437636.80,mP:.10,m:14117.32,cP:.80,c:3501094.43},
+      medidaINVAL:{lb:'A la Medida',d:.005,p:4354486.19,aP:.11,a:478993.48,mP:.20,m:28093.46,cP:.69,c:3004595.47}
+    }},
+  cedro:{nm:'Cedro 5D',m2:53.08,m2i:51.30,rm:2,ba:1,pk:1,or:'Este',list:3679737.33,rent:18000,
+    pl:{
+      planA:{lb:'Plan A',d:.015,p:3624541.27,aP:.11,a:398699.54,mP:.16,m:18707.31,cP:.73,c:2645915.13},
+      planB:{lb:'Plan B',d:.035,p:3550946.52,aP:.17,a:603660.91,mP:.10,m:11454.67,cP:.73,c:2592190.96},
+      contadoA:{lb:'Contado A',d:.10,p:3311763.60,aP:.50,a:1655881.80,mP:0,m:0,cP:.50,c:1655881.80},
+      contadoB:{lb:'Contado B',d:.18,p:3017384.61,aP:1,a:3017384.61,mP:0,m:0,cP:0,c:0},
+      promoINVAL:{lb:'Promo INVAL',d:0,p:3679737.33,aP:.10,a:367973.73,mP:.10,m:11870.12,cP:.80,c:2943789.86},
+      medidaINVAL:{lb:'A la Medida',d:.005,p:3661338.64,aP:.11,a:402747.25,mP:.20,m:23621.54,cP:.69,c:2526323.66}
+    }}
+};
+const PKS=['promoINVAL','planA','planB','medidaINVAL','contadoA','contadoB'];
+const $=id=>document.getElementById(id);
+const F=n=>'$'+Math.round(n).toLocaleString('es-MX');
+const P=n=>(n*100).toFixed(1)+'%';
+const PI=n=>Math.round(n*100)+'%';
+
+function pr(){
+  return{
+    apprY:+$('apprY').value/100,
+    mSell:+$('mSell').value,
+    comAgent:+$('comAgent').value/100,
+    isr:+$('isr').value/100,
+    notario:+$('notario').value/100,
+    hipR:+$('hipRate').value/100,
+    hipC:+$('hipCom').value/100,
+    pC:$('pC').value,
+    pD:$('pD').value,
+    cm:$('contraMode').value,
+    rentInfl:+$('rentInfl').value/100
+  };
+}
+function sCost(p){return p.comAgent+p.isr+p.notario}
+
+function mortPay(P,r){if(P<=0)return 0;const mr=r/12,n=240;return P*mr*Math.pow(1+mr,n)/(Math.pow(1+mr,n)-1)}
+function mortBal(P,r,x){if(P<=0||x<=0)return P;const mr=r/12,n=240;return P*(Math.pow(1+mr,n)-Math.pow(1+mr,x))/(Math.pow(1+mr,n)-1)}
+
+function calc(unit,pk,p,ov){
+  const pl=unit.pl[pk];
+  const apprY=ov?.apprY!==undefined?ov.apprY:p.apprY;
+  const mSell=ov?.mSell!==undefined?ov.mSell:p.mSell;
+  const totalMens=pl.m*MSI;
+  const totalMonths=PRE+mSell;
+  const totalAppr=Math.pow(1+apprY,totalMonths/12)-1;
+  const mktVal=unit.list*(1+totalAppr);
+  const comAgentAmt=mktVal*p.comAgent;
+  const isrAmt=mktVal*p.isr;
+  const notarioAmt=mktVal*p.notario;
+  const sellCosts=comAgentAmt+isrAmt+notarioAmt;
+  const netSale=mktVal-sellCosts;
+
+  // TU INVERSION REAL = solo lo que metes durante preventa
+  const capitalInvertido=pl.a+totalMens;
+
+  // Profit = neto de venta - precio de compra - costos de credito (si aplica)
+  // La contraentrega NO es inversion: es paso mecanico para cerrar y vender
+  // Con cash: la pagas, vendes, la recuperas. Sin costo extra.
+  // Con credito: el banco la pone, pero pagas comision + intereses = costo extra.
+  let hipOpen=0,hipMo=0,hipTotal=0,mortPayoff=0,hipInterest=0;
+
+  if(pl.c>0 && p.cm==='hip'){
+    hipOpen=pl.c*p.hipC;
+    hipMo=mortPay(pl.c,p.hipR);
+    hipTotal=hipMo*mSell;
+    mortPayoff=mortBal(pl.c,p.hipR,mSell);
+    // Interes pagado = pagos totales - principal amortizado
+    const principalPaid=pl.c-mortPayoff;
+    hipInterest=hipTotal-principalPaid;
+  }
+
+  // Ganancia base = lo que vale - lo que costó - costos de venta
+  const profitBase=netSale-pl.p;
+  // Si usas credito, le restas los costos del credito
+  const creditCosts=hipOpen+hipInterest;
+  const profit=profitBase-creditCosts;
+
+  // ROI = ganancia / tu capital real (anticipo + mensualidades)
+  const roi=capitalInvertido>0?profit/capitalInvertido:0;
+  const roiAnn=totalMonths>0?roi/(totalMonths/12):0;
+
+  // cashOut para mostrar desglose (lo que sale de tu bolsa en total, incluyendo contra si es cash)
+  let cashOutDisplay=capitalInvertido;
+  if(pl.c>0){
+    if(p.cm==='hip') cashOutDisplay+=hipOpen+hipTotal;
+    else cashOutDisplay+=pl.c; // pasa por tu mano pero regresa al vender
+  }
+
+  return{pl,totalMens,capitalInvertido,cashOutDisplay,mktVal,sellCosts,comAgentAmt,isrAmt,notarioAmt,netSale,
+    mortPayoff,hipOpen,hipMo,hipTotal,hipInterest,creditCosts,profitBase,profit,roi,roiAnn,
+    totalAppr,totalMonths,pk};
+}
+
+// Find best plan for a unit
+function bestPlan(unit,p){
+  let best=null,bestRoi=-Infinity,bestProfit=-Infinity;
+  for(const pk of PKS){
+    const r=calc(unit,pk,p);
+    if(r.roi>bestRoi||(r.roi===bestRoi&&r.profit>bestProfit)){bestRoi=r.roi;bestProfit=r.profit;best=pk;}
+  }
+  return best;
+}
+
+// Resolve plan (auto or manual)
+function resolvePlan(uk,p){
+  if((uk==='ceiba'?p.pC:p.pD)==='auto') return bestPlan(U[uk],p);
+  return uk==='ceiba'?p.pC:p.pD;
+}
+
+// ============ RECOMMENDATION ============
+function renderReco(p){
+  // Find absolute best across both units x all plans
+  let best={roi:-Infinity},bestProfit={profit:-Infinity};
+  for(const pk of PKS)for(const[uk,unit]of Object.entries(U)){
+    const r=calc(unit,pk,p);
+    if(r.roi>best.roi)best={roi:r.roi,r,unit,uk,pk};
+    if(r.profit>bestProfit.profit)bestProfit={profit:r.profit,r,unit,uk,pk};
+  }
+
+  // Selected plans
+  const pkC=resolvePlan('ceiba',p),pkD=resolvePlan('cedro',p);
+  const rc=calc(U.ceiba,pkC,p),rd=calc(U.cedro,pkD,p);
+  const cW=rc.roi>rd.roi||(rc.roi===rd.roi&&rc.profit>rd.profit);
+  const winner=cW?{r:rc,unit:U.ceiba,uk:'ceiba',pk:pkC}:{r:rd,unit:U.cedro,uk:'cedro',pk:pkD};
+  const loser=cW?{r:rd,unit:U.cedro,uk:'cedro',pk:pkD}:{r:rc,unit:U.ceiba,uk:'ceiba',pk:pkC};
+
+  // Check if ROI is same for both (same plan = proportional structure)
+  const sameROI=Math.abs(rc.roi-rd.roi)<0.001;
+
+  if(sameROI){
+    // Same ROI - subjective choice
+    $('reco').innerHTML=`
+    <h2>Mi recomendacion para tu flip</h2>
+    <div class="reco-main">
+      <span class="winner-plan">${best.r.pl.lb}</span>
+      <span style="color:var(--m);font-size:.85rem">→</span>
+      <span class="winner-roi">${P(best.roi)} ROI</span>
+      <span style="color:var(--m);font-size:.8rem">(${P(best.r.roiAnn)} anualizado)</span>
+    </div>
+    <div class="reco-detail">
+      <b>Ambos depas dan el mismo ROI con este plan.</b> La diferencia es subjetiva:
+    </div>
+    <div class="reco-compare">
+      <div class="reco-card">
+        <div class="rc-name" style="color:var(--ac)">Ceiba 5H — si quieres mayor ganancia</div>
+        <div class="rc-row"><span class="k">Inversion</span><span class="v">${F(rc.capitalInvertido)}</span></div>
+        <div class="rc-row"><span class="k">Ganancia</span><span class="v" style="color:var(--g)">${F(rc.profit)}</span></div>
+        <div style="font-size:.68rem;color:var(--m);margin-top:.4rem;line-height:1.5">
+          58.59m² | 2 rec + <b>1.5 baños</b> | Orient. Oeste<br>
+          El medio baño extra lo hace mas atractivo para familias y para reventa. Mas m² = mayor precio absoluto.
+        </div>
+      </div>
+      <div class="reco-card">
+        <div class="rc-name" style="color:var(--ac2)">Cedro 5D — si quieres menor capital de entrada</div>
+        <div class="rc-row"><span class="k">Inversion</span><span class="v">${F(rd.capitalInvertido)}</span></div>
+        <div class="rc-row"><span class="k">Ganancia</span><span class="v" style="color:var(--g)">${F(rd.profit)}</span></div>
+        <div style="font-size:.68rem;color:var(--m);margin-top:.4rem;line-height:1.5">
+          53.08m² | 2 rec + 1 baño | Orient. Este<br>
+          Mas accesible: necesitas ${F(rc.capitalInvertido-rd.capitalInvertido)} menos de entrada. Mismo ROI %. Si tu presupuesto es ajustado, esta es la opcion.
+        </div>
+      </div>
+    </div>
+    <div style="margin-top:.8rem;padding:.6rem;background:var(--c2);border-radius:8px;border-left:3px solid var(--ac)">
+      <p style="font-size:.75rem;font-weight:700;margin-bottom:.3rem">Mi opinion: Ceiba 5H es mas facil de vender/rentar</p>
+      <p style="font-size:.7rem;color:var(--m);line-height:1.5">El medio baño adicional (1.5 vs 1) es un diferenciador importante en reventa y renta. Familias y parejas lo valoran. Los 5.5m² extra tambien suman. Si tienes el capital, Ceiba es la apuesta mas segura para el flip.</p>
+    </div>`;
+  } else {
+    // Different ROI - clear winner
+    const w=cW?{r:rc,unit:U.ceiba,uk:'ceiba',col:'var(--ac)'}:{r:rd,unit:U.cedro,uk:'cedro',col:'var(--ac2)'};
+    $('reco').innerHTML=`
+    <h2>Mi recomendacion para tu flip</h2>
+    <div class="reco-main">
+      <span class="winner-name">${w.unit.nm}</span>
+      <span class="winner-plan">${w.r.pl.lb}</span>
+      <span style="color:var(--m);font-size:.85rem">→</span>
+      <span class="winner-roi">${P(w.r.roi)} ROI</span>
+      <span style="color:var(--m);font-size:.8rem">(${P(w.r.roiAnn)} anualizado)</span>
+    </div>
+    <div class="reco-detail">
+      Inviertes <b>${F(w.r.capitalInvertido)}</b> en preventa → propiedad vale <b>${F(w.r.mktVal)}</b> → ganancia neta <b style="color:var(--g)">${F(w.r.profit)}</b>.
+    </div>
+    <div class="reco-card" style="margin-top:.8rem">
+      <div class="rc-row"><span class="k">Plan</span><span class="v">${w.r.pl.lb} (${PI(w.r.pl.d)} descuento)</span></div>
+      <div class="rc-row"><span class="k">Precio de compra</span><span class="v">${F(w.r.pl.p)}</span></div>
+      <div class="rc-row"><span class="k">Tu inversion (anticipo + MSI)</span><span class="v" style="color:var(--ac)">${F(w.r.capitalInvertido)}</span></div>
+      <div class="rc-row"><span class="k">Valor al vender</span><span class="v">${F(w.r.mktVal)}</span></div>
+      <div class="rc-row"><span class="k">Costos de venta</span><span class="v" style="color:var(--r)">-${F(w.r.sellCosts)}</span></div>
+      <div class="rc-row"><span class="k">Ganancia neta</span><span class="v" style="color:var(--g);font-weight:800;font-size:.9rem">${F(w.r.profit)}</span></div>
+      <div class="rc-row"><span class="k">ROI</span><span class="v" style="color:var(--g);font-weight:800;font-size:.9rem">${P(w.r.roi)}</span></div>
+    </div>`;
+  }
+}
+
+// ============ SPLIT VIEW ============
+function renderSplit(p){
+  let h='';
+  const pkC=resolvePlan('ceiba',p),pkD=resolvePlan('cedro',p);
+  for(const[uk,unit]of Object.entries(U)){
+    const pk=uk==='ceiba'?pkC:pkD;
+    const r=calc(unit,pk,p);
+    const otherR=uk==='ceiba'?calc(U.cedro,pkD,p):calc(U.ceiba,pkC,p);
+    const isW=r.roi>otherR.roi||(r.roi===otherR.roi&&r.profit>otherR.profit);
+    const col=uk==='ceiba'?'var(--ac)':'var(--ac2)';
+    const isHip=p.cm==='hip'&&r.pl.c>0;
+
+    h+=`<div class="card">
+      <div class="ch ${uk}">
+        <span class="tt" style="color:${col}">${unit.nm}</span>
+        <span class="bsm ${isW?'bw':'ba'}">${isW?'MEJOR ROI':'Alternativa'}</span>
+      </div><div class="cb">
+        <div class="specs">
+          <div class="sp"><div class="n">${unit.m2}</div><div class="l">m² total</div></div>
+          <div class="sp"><div class="n">${unit.rm}</div><div class="l">recamaras</div></div>
+          <div class="sp"><div class="n">${unit.ba}</div><div class="l">banos</div></div>
+          <div class="sp"><div class="n">${unit.or}</div><div class="l">orient.</div></div>
+        </div>
+
+        <div class="lbl" style="color:${col}">Precio</div>
+        <div class="rw"><span class="k">Lista</span><span class="v">${F(unit.list)}</span></div>
+        <div class="rw"><span class="k">Desc. ${r.pl.lb} (${PI(r.pl.d)})</span><span class="v" style="color:var(--g)">-${F(unit.list*r.pl.d)}</span></div>
+        <div class="rw"><span class="k"><b>Precio final</b></span><span class="v" style="color:var(--y)"><b>${F(r.pl.p)}</b></span></div>
+        <div class="rw"><span class="k">$/m²</span><span class="v">${F(r.pl.p/unit.m2)}</span></div>
+
+        <div class="lbl" style="color:${col}">Pagos preventa (~25 meses)</div>
+        <div class="pbar">
+          <div class="seg-a" style="width:${r.pl.a/r.pl.p*100}%">${r.pl.a/r.pl.p*100>7?'Enganche':''}</div>
+          <div class="seg-m" style="width:${r.totalMens/r.pl.p*100}%">${r.totalMens/r.pl.p*100>5?'MSI':''}</div>
+          <div class="seg-c" style="width:${r.pl.c/r.pl.p*100}%">${r.pl.c/r.pl.p*100>7?'Contra':''}</div>
+        </div>
+        <div class="rw"><span class="k">Anticipo (${PI(r.pl.aP)})</span><span class="v">${F(r.pl.a)}</span></div>
+        <div class="rw"><span class="k">${MSI} mensualidades</span><span class="v">${r.pl.m>0?F(r.pl.m)+'/mes':'N/A'}</span></div>
+        <div class="rw"><span class="k">Total mensualidades</span><span class="v">${F(r.totalMens)}</span></div>
+        <div class="rw"><span class="k">Contraentrega (${PI(r.pl.cP)})</span><span class="v">${F(r.pl.c)}</span></div>
+
+        ${isHip?`<div class="lbl" style="color:var(--o)">Credito hipotecario</div>
+        <div class="rw"><span class="k">Monto credito</span><span class="v">${F(r.pl.c)}</span></div>
+        <div class="rw"><span class="k">Comision apertura (${PI(p.hipC)})</span><span class="v" style="color:var(--r)">${F(r.hipOpen)}</span></div>
+        <div class="rw"><span class="k">Pago mensual (20 anos @ ${PI(p.hipR)})</span><span class="v">${F(r.hipMo)}</span></div>
+        <div class="rw"><span class="k">Costo real del credito (comision + ${p.mSell} pagos)</span><span class="v" style="color:var(--r)">${F(r.hipOpen+r.hipTotal)}</span></div>
+        <div class="rw"><span class="k">Saldo a liquidar al vender</span><span class="v">${F(r.mortPayoff)}</span></div>`:''}
+
+        <div class="lbl" style="color:var(--g)">Tu inversion real (capital en juego)</div>
+        <div class="mets">
+          <div class="met"><div class="mv" style="color:var(--ac)">${F(r.pl.a)}</div><div class="ml">Anticipo</div></div>
+          <div class="met"><div class="mv" style="color:var(--y)">${F(r.totalMens)}</div><div class="ml">${MSI} mensualidades</div></div>
+          <div class="met" style="border:1px solid var(--g)"><div class="mv" style="color:var(--g)">${F(r.capitalInvertido)}</div><div class="ml">TU INVERSION</div></div>
+        </div>
+
+        <div class="lbl" style="color:var(--y)">Flip: venta mes ${r.totalMonths} (${(r.totalMonths/12).toFixed(1)} anos)</div>
+        <div class="rw"><span class="k">Aprec. ${P(p.apprY)}/ano × ${(r.totalMonths/12).toFixed(1)} anos = ${P(r.totalAppr)}</span><span class="v" style="color:var(--g)">+${F(r.mktVal-unit.list)}</span></div>
+        <div class="rw"><span class="k">Valor de mercado</span><span class="v" style="color:var(--y)">${F(r.mktVal)}</span></div>
+        <div class="rw"><span class="k">Comision agente (${PI(p.comAgent)})</span><span class="v" style="color:var(--r)">-${F(r.comAgentAmt)}</span></div>
+        <div class="rw"><span class="k">ISR (${PI(p.isr)})</span><span class="v" style="color:var(--r)">-${F(r.isrAmt)}</span></div>
+        <div class="rw"><span class="k">Notario (${PI(p.notario)})</span><span class="v" style="color:var(--r)">-${F(r.notarioAmt)}</span></div>
+        <div class="rw"><span class="k">Neto de venta</span><span class="v">${F(r.netSale)}</span></div>
+        <div class="rw"><span class="k">- Precio de compra</span><span class="v" style="color:var(--r)">-${F(r.pl.p)}</span></div>
+        <div class="rw"><span class="k">= Ganancia bruta (plusvalia - costos venta)</span><span class="v" style="color:${r.profitBase>=0?'var(--g)':'var(--r)'}">${F(r.profitBase)}</span></div>
+
+        <div class="mets">
+          <div class="met" style="border:1px solid ${r.profit>=0?'var(--g)':'var(--r)'}"><div class="mv" style="color:${r.profit>=0?'var(--g)':'var(--r)'}">${F(r.profit)}</div><div class="ml">Ganancia neta</div></div>
+          <div class="met" style="border:1px solid ${r.roi>=0?'var(--g)':'var(--r)'}"><div class="mv" style="color:${r.roi>=0?'var(--g)':'var(--r)'}">${P(r.roi)}</div><div class="ml">ROI</div></div>
+          <div class="met"><div class="mv">${P(r.roiAnn)}</div><div class="ml">ROI anualizado</div></div>
+        </div>
+
+      </div></div>`;
+  }
+  $('splitV').innerHTML=h;
+}
+
+// ============ MATRIX ============
+function renderMat(p){
+  let best={roi:-Infinity},bk='';
+  const rows=[];
+  for(const pk of PKS)for(const[uk,unit]of Object.entries(U)){
+    const r=calc(unit,pk,p);rows.push({uk,unit,pk,r});
+    if(r.roi>best.roi||(r.roi===best.roi&&r.profit>best.profit)){best={roi:r.roi,profit:r.profit};bk=uk+pk;}
+  }
+  let h=`<tr><th>Plan</th><th>Depa</th><th>Precio</th><th>Desc.</th><th>Inv. preventa</th><th>Valor vta</th><th>Com.agente</th><th>ISR</th><th>Notario</th><th>Ganancia</th><th>ROI</th><th>ROI/ano</th></tr>`;
+  for(const{uk,unit,pk,r}of rows){
+    const ib=uk+pk===bk;
+    h+=`<tr style="${ib?'background:rgba(22,163,74,.08)':''}">
+      <td><b>${r.pl.lb}</b></td>
+      <td style="color:${uk==='ceiba'?'var(--ac)':'var(--ac2)'}">${unit.nm}</td>
+      <td>${F(r.pl.p)}</td><td>${PI(r.pl.d)}</td><td>${F(r.capitalInvertido)}</td><td>${F(r.mktVal)}</td>
+      <td style="color:var(--r)">${F(r.comAgentAmt)}</td>
+      <td style="color:var(--r)">${F(r.isrAmt)}</td>
+      <td style="color:var(--r)">${F(r.notarioAmt)}</td>
+      <td style="color:${r.profit>=0?'var(--g)':'var(--r)'}">${F(r.profit)}</td>
+      <td class="${ib?'best':''}" style="font-weight:700">${P(r.roi)}${ib?' ★':''}</td>
+      <td>${P(r.roiAnn)}</td></tr>`;
+  }
+  $('matTbl').innerHTML=h;
+}
+
+// ============ BREAKEVEN ============
+function renderBE(p){
+  // Calculate breakeven for all plan/unit combos
+  const rows=[];
+  for(const pk of PKS)for(const[uk,unit]of Object.entries(U)){
+    let be=null;
+    for(let a=0;a<=50;a+=0.1){if(calc(unit,pk,p,{apprY:a/100}).profit>=0){be=a;break;}}
+    rows.push({pk,uk,unit,be,lb:unit.pl[pk].lb,d:unit.pl[pk].d});
+  }
+  // Sort by breakeven ascending (lowest first = needs least appreciation = safest)
+  rows.sort((a,b)=>(a.be??999)-(b.be??999));
+
+  let h=`<tr><th>#</th><th>Plan</th><th>Depa</th><th>Descuento</th><th>Aprec. minima para no perder</th><th>Interpretacion</th></tr>`;
+  rows.forEach((r,i)=>{
+    const safe=r.be!==null&&r.be<=5;
+    const ok=r.be!==null&&r.be<=10;
+    const color=safe?'var(--g)':ok?'var(--y)':'var(--r)';
+    const interp=safe?'Muy seguro: ganas con poca plusvalia':ok?'Necesitas plusvalia moderada':'Riesgoso: necesitas mucha plusvalia';
+    h+=`<tr>
+      <td style="color:var(--m)">${i+1}</td>
+      <td><b>${r.lb}</b></td>
+      <td style="color:${r.uk==='ceiba'?'var(--ac)':'var(--ac2)'}">${r.unit.nm}</td>
+      <td style="color:var(--y)">${Math.round(r.d*100)}%</td>
+      <td style="font-weight:800;color:${color};font-size:.85rem">${r.be!==null?r.be.toFixed(1)+'%/año':'>50%'}</td>
+      <td style="font-size:.7rem;color:var(--m)">${interp}</td>
+    </tr>`;
+  });
+  $('beTbl').innerHTML=h;
+}
+
+// ============ WATERFALL (FLIP) ============
+function renderWaterfall(p){
+  let h='';
+  const pkC=resolvePlan('ceiba',p),pkD=resolvePlan('cedro',p);
+  for(const[uk,unit]of Object.entries(U)){
+    const pk=uk==='ceiba'?pkC:pkD;
+    const r=calc(unit,pk,p);
+    const col=uk==='ceiba'?'var(--ac)':'var(--ac2)';
+    const isHip=p.cm==='hip'&&r.pl.c>0;
+
+    const steps=[];
+    steps.push({lb:'Anticipo',val:-r.pl.a,col:'var(--ac)',note:'Mes 0'});
+    if(r.totalMens>0) steps.push({lb:MSI+' mensualidades ('+F(r.pl.m)+'/mes)',val:-r.totalMens,col:'var(--y)',note:'Meses 1-'+MSI});
+    if(isHip){
+      steps.push({lb:'Com. apertura hipoteca ('+PI(p.hipC)+')',val:-r.hipOpen,col:'var(--r)',note:'Mes '+PRE});
+      steps.push({lb:'Pagos hipoteca '+p.mSell+' meses ('+F(r.hipMo)+'/mes)',val:-r.hipTotal,col:'var(--r)',note:'Mes '+(PRE+1)+'-'+(PRE+p.mSell)});
+    } else if(r.pl.c>0){
+      steps.push({lb:'Contraentrega (cash)',val:-r.pl.c,col:'var(--r)',note:'Mes '+PRE+' (pasa y regresa)'});
+    }
+    steps.push({lb:'Venta: valor de mercado',val:r.mktVal,col:'var(--g)',note:'Mes '+r.totalMonths});
+    steps.push({lb:'Comision agente ('+PI(p.comAgent)+')',val:-r.comAgentAmt,col:'var(--r)',note:''});
+    steps.push({lb:'ISR ('+PI(p.isr)+')',val:-r.isrAmt,col:'var(--r)',note:''});
+    steps.push({lb:'Notario ('+PI(p.notario)+')',val:-r.notarioAmt,col:'var(--r)',note:''});
+    if(isHip&&r.mortPayoff>0) steps.push({lb:'Liquidar saldo hipoteca',val:-r.mortPayoff,col:'var(--r)',note:''});
+    else if(r.pl.c>0&&p.cm!=='hip') steps.push({lb:'Contraentrega recuperada',val:r.pl.c,col:'var(--g)',note:'La recuperas al vender'});
+
+    let running=0;const wSteps=[];
+    for(const st of steps){const prev=running;running+=st.val;wSteps.push({...st,prev,running});}
+    // Final = profit (should match r.profit for hip, or profitBase for cash contra)
+    wSteps.push({lb:'GANANCIA NETA',val:r.profit,col:r.profit>=0?'var(--g)':'var(--r)',prev:0,running:r.profit,isTotal:true});
+
+    let maxAbs=0;
+    for(const w of wSteps) maxAbs=Math.max(maxAbs,Math.abs(w.val));
+    const barScale=v=>Math.max(2,Math.abs(v)/maxAbs*100);
+
+    h+=`<div class="card"><div class="ch ${uk}"><span class="tt" style="color:${col}">${unit.nm} — ${r.pl.lb}</span></div><div class="cb">
+      <div style="overflow-x:auto"><table style="width:100%;border-collapse:collapse;font-size:.72rem">`;
+
+    for(const w of wSteps){
+      const isPos=w.val>=0;
+      const width=barScale(w.val);
+      const barColor=w.isTotal?(w.val>=0?'var(--g)':'var(--r)'):w.col;
+      const bStyle=w.isTotal?'border-top:2px solid var(--b);':'';
+      h+=`<tr style="${bStyle}">
+        <td style="padding:.35rem .5rem;width:200px;white-space:nowrap;${w.isTotal?'font-weight:800':''}">${w.lb}</td>
+        <td style="padding:.35rem .3rem;width:120px;text-align:right;font-weight:700;color:${barColor};${w.isTotal?'font-size:.85rem':''}">${isPos?'+':''}${F(w.val)}</td>
+        <td style="padding:.35rem .5rem">
+          <div style="display:flex;align-items:center;height:20px">
+            <div style="width:${width}%;min-width:4px;height:${w.isTotal?'18':'14'}px;background:${barColor};border-radius:3px;opacity:${w.isTotal?1:.7}"></div>
+          </div>
+        </td>
+        <td style="padding:.35rem .3rem;font-size:.6rem;color:var(--m);white-space:nowrap">${w.note||''}</td>
+      </tr>`;
+    }
+
+    h+=`</table></div>
+      <div class="mets" style="margin-top:.5rem">
+        <div class="met"><div class="mv" style="color:var(--ac)">${F(r.capitalInvertido)}</div><div class="ml">Tu inversion</div></div>
+        <div class="met" style="border:1px solid ${r.profit>=0?'var(--g)':'var(--r)'}"><div class="mv" style="color:${r.profit>=0?'var(--g)':'var(--r)'}">${F(r.profit)}</div><div class="ml">Ganancia neta</div></div>
+        <div class="met" style="border:1px solid ${r.roi>=0?'var(--g)':'var(--r)'}"><div class="mv" style="color:${r.roi>=0?'var(--g)':'var(--r)'}">${P(r.roi)}</div><div class="ml">ROI</div></div>
+        <div class="met"><div class="mv">${P(r.roiAnn)}</div><div class="ml">ROI anualizado</div></div>
+      </div>
+    </div></div>`;
+  }
+  $('waterfallV').innerHTML=h;
+}
+
+// ============ INSIGHTS ============
+function renderIns(p){
+  let bestROI={roi:-Infinity},bestProfit={p:-Infinity},cheapest={c:Infinity,r:null,unit:null,uk:null},bestCap={cap:0};
+  for(const pk of PKS)for(const[uk,unit]of Object.entries(U)){
+    const r=calc(unit,pk,p);
+    if(r.roi>bestROI.roi)bestROI={roi:r.roi,r,unit,uk};
+    if(r.profit>bestProfit.p)bestProfit={p:r.profit,r,unit,uk};
+    if(r.capitalInvertido<cheapest.c&&r.capitalInvertido>0)cheapest={c:r.capitalInvertido,r,unit,uk};
+    const cap=(unit.rent*12*.95-Math.round(unit.m2*65)*12)/r.pl.p;
+    if(cap>bestCap.cap)bestCap={cap,r,unit,uk};
+  }
+
+  const pkC=resolvePlan('ceiba',p),pkD=resolvePlan('cedro',p);
+  const sameP=pkC===pkD;
+
+  $('ins').innerHTML=`
+    <div class="ins top"><h4>Mejor ROI</h4><div class="num">${P(bestROI.roi)}</div>
+      <p><b>${bestROI.unit.nm} + ${bestROI.r.pl.lb}</b>: Inviertes ${F(bestROI.r.capitalInvertido)} en preventa, ganas ${F(bestROI.r.profit)}.</p></div>
+    <div class="ins top"><h4>Mayor ganancia en pesos</h4><div class="num">${F(bestProfit.p)}</div>
+      <p><b>${bestProfit.unit.nm} + ${bestProfit.r.pl.lb}</b>: Mas dinero neto. Capital: ${F(bestProfit.r.capitalInvertido)}.</p></div>
+    <div class="ins info"><h4>Menor capital de entrada</h4><div class="num">${F(cheapest.c)}</div>
+      <p><b>${cheapest.unit.nm} + ${cheapest.r.pl.lb}</b>: Lo mas accesible para entrar.</p></div>
+    <div class="ins info"><h4>Mejor cap rate (renta)</h4><div class="num">${P(bestCap.cap)}</div>
+      <p><b>${bestCap.unit.nm} + ${bestCap.r.pl.lb}</b>: Mejor retorno anual si decides rentar.</p></div>
+    ${sameP?`<div class="ins warn"><h4>Mismo plan = ROI % muy similar</h4>
+      <p>Con el mismo plan la estructura es proporcional. La diferencia viene del <b>credito hipotecario</b> (contraentrega diferente = pagos distintos), la <b>ganancia absoluta</b>, y la <b>renta</b> ($22K vs $18K).</p></div>`:''}
+    <div class="ins warn"><h4>Ceiba vs Cedro</h4>
+      <p>Ceiba: 58.59m², 1.5 banos, renta $22K, orient. Oeste.<br>Cedro: 53.08m², 1 bano, renta $18K, orient. Este.<br>El medio bano y 5.5m² extra hacen Ceiba mas atractiva para renta y reventa.</p></div>`;
+}
+
+// ============ PLAN GUIDE ============
+function renderPlanGuide(){
+  const descs={
+    promoINVAL:['El mas barato de entrada','10% enganche + 31 MSI de ~$14K + 80% contraentrega','0%','Minimo capital durante preventa. Ideal para flip: maxima palanca.'],
+    planA:['Enganche medio, mensualidades mas altas','11% enganche + 31 MSI de ~$22K + 73% contraentrega','1.5%','Un poco mas de capital que Promo INVAL, descuento minimo.'],
+    medidaINVAL:['Enganche medio, mensualidades altas','11% enganche + 31 MSI de ~$28K + 69% contraentrega','0.5%','Mas mensualidades que Plan A, menos contraentrega.'],
+    planB:['Enganche alto, mensualidades bajas','17% enganche + 31 MSI de ~$14K + 73% contraentrega','3.5%','Enganche fuerte pero mensualidades ligeras. Descuento moderado.'],
+    contadoA:['Mitad de contado','50% enganche + 0 MSI + 50% contraentrega','10%','Buen descuento pero necesitas ~$2M de entrada.'],
+    contadoB:['Todo de contado','100% del precio, sin mensualidades ni contraentrega','18%','Maximo descuento pero necesitas ~$3.6M de golpe.']
+  };
+  let h=`<tr><th>Plan</th><th>En que consiste</th><th>Estructura de pagos</th><th>Descuento</th><th>Capital preventa (Ceiba)</th><th>Capital preventa (Cedro)</th></tr>`;
+  for(const pk of PKS){
+    const d=descs[pk];
+    const cC=U.ceiba.pl[pk];const cD=U.cedro.pl[pk];
+    const capC=cC.a+cC.m*MSI;const capD=cD.a+cD.m*MSI;
+    h+=`<tr>
+      <td><b>${cC.lb}</b></td>
+      <td style="font-size:.72rem">${d[0]}</td>
+      <td style="font-size:.72rem">${d[1]}</td>
+      <td style="color:var(--y);font-weight:700">${d[2]}</td>
+      <td style="color:var(--ac);font-weight:700">${F(capC)}</td>
+      <td style="color:var(--ac2);font-weight:700">${F(capD)}</td>
+    </tr>`;
+  }
+  $('planGuideTbl').innerHTML=h;
+}
+
+// ============ GUIDE: BEST PLAN PER SCENARIO ============
+function renderGuide(p){
+  const aprs=[0,2,3,5,8,10,12,15,18,20,25];
+  let h=`<tr><th>Si la apreciacion es...</th><th>Mejor plan Ceiba</th><th>ROI Ceiba</th><th>Ganancia Ceiba</th><th>Mejor plan Cedro</th><th>ROI Cedro</th><th>Ganancia Cedro</th><th>Ganador absoluto</th></tr>`;
+  for(const a of aprs){
+    let bestC={roi:-Infinity},bestD={roi:-Infinity};
+    for(const pk of PKS){
+      const rc=calc(U.ceiba,pk,p,{apprY:a/100});
+      const rd=calc(U.cedro,pk,p,{apprY:a/100});
+      if(rc.roi>bestC.roi||(rc.roi===bestC.roi&&rc.profit>bestC.profit))bestC={roi:rc.roi,profit:rc.profit,lb:rc.pl.lb,r:rc};
+      if(rd.roi>bestD.roi||(rd.roi===bestD.roi&&rd.profit>bestD.profit))bestD={roi:rd.roi,profit:rd.profit,lb:rd.pl.lb,r:rd};
+    }
+    const planHint=lb=>{const h={'Promo INVAL':'(10% eng, 0% desc)','Plan A':'(11% eng, 1.5% desc)','Plan B':'(17% eng, 3.5% desc)','A la Medida':'(11% eng, 0.5% desc)','Contado A':'(50% eng, 10% desc)','Contado B':'(100%, 18% desc)'};return h[lb]||''};
+    const winner=bestC.roi>bestD.roi?'Ceiba '+bestC.lb:bestD.roi>bestC.roi?'Cedro '+bestD.lb:'Empate ('+bestC.lb+')';
+    const wColor=bestC.roi>bestD.roi?'var(--ac)':bestD.roi>bestC.roi?'var(--ac2)':'var(--y)';
+    const cur=Math.abs(a-p.apprY*100)<0.3;
+    h+=`<tr style="${cur?'background:rgba(91,77,199,.08);font-weight:700':''}">
+      <td style="font-weight:700">${a}%/año${cur?' ◄ tu escenario':''}</td>
+      <td style="color:var(--ac)"><b>${bestC.lb}</b><br><span style="font-size:.6rem;color:var(--m)">${planHint(bestC.lb)}</span></td>
+      <td style="color:${bestC.roi>=0?'var(--g)':'var(--r)'}; font-weight:700">${P(bestC.roi)}</td>
+      <td style="color:${bestC.profit>=0?'var(--g)':'var(--r)'}">${F(bestC.profit)}</td>
+      <td style="color:var(--ac2)"><b>${bestD.lb}</b><br><span style="font-size:.6rem;color:var(--m)">${planHint(bestD.lb)}</span></td>
+      <td style="color:${bestD.roi>=0?'var(--g)':'var(--r)'}; font-weight:700">${P(bestD.roi)}</td>
+      <td style="color:${bestD.profit>=0?'var(--g)':'var(--r)'}">${F(bestD.profit)}</td>
+      <td style="color:${wColor};font-weight:800;font-size:.8rem">${winner}</td>
+    </tr>`;
+  }
+  $('guideTbl').innerHTML=h;
+}
+
+// ============ SUSTAIN: RENTA = HIPOTECA ============
+function mortMax(payment,r){if(payment<=0)return 0;const mr=r/12,n=240;return payment*(Math.pow(1+mr,n)-1)/(mr*Math.pow(1+mr,n))}
+
+function renderSustain(p){
+  let h='';
+  const years=20;
+  for(const[uk,unit]of Object.entries(U)){
+    const col=uk==='ceiba'?'var(--ac)':'var(--ac2)';
+    const mant=Math.round(unit.m2*65);
+    const rentNet=unit.rent*0.95;
+    const disponible=rentNet-mant;
+    const maxMort=mortMax(disponible,p.hipR);
+    const rentNetAnnual=disponible*12;
+
+    h+=`<div class="card"><div class="ch ${uk}"><span class="tt" style="color:${col}">${unit.nm}</span></div><div class="cb">
+
+      <div class="lbl" style="color:var(--y)">Renta disponible para pagar hipoteca</div>
+      <div class="rw"><span class="k">Renta bruta</span><span class="v">${F(unit.rent)}/mes</span></div>
+      <div class="rw"><span class="k">Vacancia (5%)</span><span class="v" style="color:var(--r)">-${F(unit.rent*0.05)}/mes</span></div>
+      <div class="rw"><span class="k">Mantenimiento (${unit.m2}m² × $65)</span><span class="v" style="color:var(--r)">-${F(mant)}/mes</span></div>
+      <div class="rw" style="border-top:2px solid var(--b)"><span class="k"><b>Disponible para hipoteca</b></span><span class="v" style="color:var(--g);font-weight:800;font-size:.9rem"><b>${F(disponible)}/mes</b></span></div>
+      <div class="rw"><span class="k">Hipoteca maxima que cubre la renta (${PI(p.hipR)}, 20 años)</span><span class="v" style="font-weight:800;color:var(--y)">${F(maxMort)}</span></div>
+
+      <div class="lbl" style="color:${col}">Por plan: ¿cuanto poner en preventa para que la renta cubra la hipoteca?</div>
+      <p style="font-size:.68rem;color:var(--m);margin-bottom:.4rem;line-height:1.5">Si la contraentrega es mayor a ${F(maxMort)}, necesitas pagar el excedente durante la preventa. Asi reduces la hipoteca hasta que la renta la cubra.</p>
+
+      <table class="tbl"><tr><th>Plan</th><th>Precio</th><th>Contra original</th><th>Contra → hipoteca</th><th>Extra a poner</th><th>Capital preventa</th><th>Pago hip/mes</th><th>Flujo mensual</th></tr>`;
+
+    for(const pk of PKS){
+      const pl=unit.pl[pk];
+      const totalMensOrig=pl.m*MSI;
+      const capitalOrig=pl.a+totalMensOrig;
+
+      if(pl.c<=0){
+        h+=`<tr><td><b>${pl.lb}</b></td><td>${F(pl.p)}</td><td>$0</td><td>N/A</td><td style="color:var(--m)">$0</td>
+          <td style="font-weight:700">${F(capitalOrig)}</td><td>N/A</td>
+          <td style="color:var(--g)">+${F(disponible)}/mes</td></tr>`;
+        continue;
+      }
+
+      const newContra=Math.min(pl.c,maxMort);
+      const extra=pl.c-newContra;
+      const newCapital=capitalOrig+extra;
+      const hipMoNew=mortPay(newContra,p.hipR);
+      const flowMo=disponible-hipMoNew;
+      const needsExtra=extra>0;
+      const extraMSI=needsExtra?extra/MSI:0;
+
+      h+=`<tr${!needsExtra?' style="background:rgba(22,163,74,.06)"':''}>
+        <td><b>${pl.lb}</b></td>
+        <td>${F(pl.p)}</td>
+        <td>${F(pl.c)}</td>
+        <td style="color:var(--y)">${F(newContra)}</td>
+        <td style="color:${needsExtra?'var(--o)':'var(--g)'};font-weight:700">${needsExtra?F(extra)+' (+'+F(extraMSI)+'/mes)':'$0'}</td>
+        <td style="color:var(--ac);font-weight:700">${F(newCapital)}</td>
+        <td>${F(hipMoNew)}</td>
+        <td style="color:${flowMo>=0?'var(--g)':'var(--r)'}; font-weight:700">${flowMo>=0?'+':''}${F(flowMo)}/mes</td>
+      </tr>`;
+    }
+
+    h+=`</table>
+      <div style="margin-top:.6rem;padding:.5rem;background:var(--c2);border-radius:6px;border-left:3px solid ${col}">
+        <p style="font-size:.7rem;color:var(--m);line-height:1.6">
+          <b style="color:var(--t)">Como leer esta tabla:</b> "Extra a poner" es lo que necesitas pagar de mas durante preventa (encima de lo normal del plan) para que la hipoteca baje lo suficiente y la renta la cubra.
+          Si el extra es $0, el plan ya se autofinancia con la renta.
+          ${disponible>0?'<br><b>'+F(disponible)+'/mes</b> es lo que la renta puede cubrir despues de vacancia y mantenimiento. Eso soporta una hipoteca de hasta <b>'+F(maxMort)+'</b>.':'<br><span style="color:var(--r)"><b>La renta no cubre ni el mantenimiento.</b> No es viable autofinanciar con renta.</span>'}
+        </p>
+      </div>`;
+
+    // ---- LINE CHART: Property Value + Cap Rate over years ----
+    const W=600,H=260,pad={t:30,r:70,b:40,l:80};
+    const cW=W-pad.l-pad.r, cH=H-pad.t-pad.b;
+
+    // Data points: year 0 to 20 (rent grows with inflation)
+    const pts=[];
+    for(let y=0;y<=years;y++){
+      const val=unit.list*Math.pow(1+p.apprY,y);
+      const rentY=rentNetAnnual*Math.pow(1+p.rentInfl,y);
+      const capRate=val>0?rentY/val:0;
+      pts.push({y,val,capRate,rentY});
+    }
+
+    const maxVal=Math.max(...pts.map(p=>p.val));
+    const minVal=Math.min(...pts.map(p=>p.val));
+    const maxCR=Math.max(...pts.map(p=>p.capRate));
+    const minCR=Math.min(...pts.map(p=>p.capRate));
+
+    const xScale=y=>pad.l+(y/years)*cW;
+    const yScaleVal=v=>pad.t+cH-(v-minVal*0.9)/(maxVal*1.05-minVal*0.9)*cH;
+    const yScaleCR=cr=>pad.t+cH-(cr-minCR*0.8)/(maxCR*1.1-minCR*0.8)*cH;
+
+    // Build SVG paths
+    let pathVal='M';
+    let pathCR='M';
+    for(let i=0;i<pts.length;i++){
+      const x=xScale(pts[i].y);
+      pathVal+=(i?'L':'')+x.toFixed(1)+','+yScaleVal(pts[i].val).toFixed(1);
+      pathCR+=(i?'L':'')+x.toFixed(1)+','+yScaleCR(pts[i].capRate).toFixed(1);
+    }
+
+    // Y-axis labels for value (5 ticks)
+    let yLabelsVal='';
+    for(let i=0;i<=4;i++){
+      const v=minVal*0.9+(maxVal*1.05-minVal*0.9)*i/4;
+      const yy=pad.t+cH-cH*i/4;
+      yLabelsVal+=`<text x="${pad.l-8}" y="${yy+3}" text-anchor="end" fill="#64748b" font-size="9">${(v/1e6).toFixed(1)}M</text>`;
+      yLabelsVal+=`<line x1="${pad.l}" y1="${yy}" x2="${W-pad.r}" y2="${yy}" stroke="#e2e8f0" stroke-dasharray="3"/>`;
+    }
+
+    // Y-axis labels for cap rate (right side, 5 ticks)
+    let yLabelsCR='';
+    for(let i=0;i<=4;i++){
+      const cr=minCR*0.8+(maxCR*1.1-minCR*0.8)*i/4;
+      const yy=pad.t+cH-cH*i/4;
+      yLabelsCR+=`<text x="${W-pad.r+8}" y="${yy+3}" text-anchor="start" fill="${uk==='ceiba'?'#5b4dc7':'#0a9988'}" font-size="9">${(cr*100).toFixed(1)}%</text>`;
+    }
+
+    // X-axis labels
+    let xLabels='';
+    for(let y=0;y<=years;y+=5){
+      const x=xScale(y);
+      xLabels+=`<text x="${x}" y="${H-pad.b+18}" text-anchor="middle" fill="#64748b" font-size="9">Año ${y}</text>`;
+      xLabels+=`<line x1="${x}" y1="${pad.t}" x2="${x}" y2="${H-pad.b}" stroke="#e2e8f0" stroke-dasharray="3"/>`;
+    }
+
+    // Key data points as dots
+    let dotsVal='', dotsCR='';
+    for(let y=0;y<=years;y+=5){
+      const x=xScale(y);
+      dotsVal+=`<circle cx="${x}" cy="${yScaleVal(pts[y].val)}" r="3.5" fill="var(--y)" stroke="white" stroke-width="1.5"/>`;
+      dotsVal+=`<text x="${x}" y="${yScaleVal(pts[y].val)-8}" text-anchor="middle" fill="var(--y)" font-size="8" font-weight="700">${F(pts[y].val)}</text>`;
+      dotsCR+=`<circle cx="${x}" cy="${yScaleCR(pts[y].capRate)}" r="3.5" fill="${col}" stroke="white" stroke-width="1.5"/>`;
+      dotsCR+=`<text x="${x}" y="${yScaleCR(pts[y].capRate)+14}" text-anchor="middle" fill="${col}" font-size="8" font-weight="700">${(pts[y].capRate*100).toFixed(2)}%</text>`;
+    }
+
+    h+=`<div class="lbl" style="color:${col};margin-top:1.2rem">Valor de la propiedad y Cap Rate a ${years} años</div>
+      <p style="font-size:.68rem;color:var(--m);margin-bottom:.5rem">Linea naranja = valor de la propiedad (plusvalia ${PI(p.apprY)}/año). Linea ${uk==='ceiba'?'morada':'verde'} = Cap Rate (renta neta / valor). La renta crece con inflacion al ${PI(p.rentInfl)}/año.</p>
+      <div style="overflow-x:auto">
+      <svg viewBox="0 0 ${W} ${H}" style="width:100%;max-width:${W}px;height:auto;font-family:system-ui,sans-serif">
+        ${yLabelsVal}${yLabelsCR}${xLabels}
+        <!-- Axes -->
+        <line x1="${pad.l}" y1="${pad.t}" x2="${pad.l}" y2="${H-pad.b}" stroke="#94a3b8" stroke-width="1"/>
+        <line x1="${pad.l}" y1="${H-pad.b}" x2="${W-pad.r}" y2="${H-pad.b}" stroke="#94a3b8" stroke-width="1"/>
+        <line x1="${W-pad.r}" y1="${pad.t}" x2="${W-pad.r}" y2="${H-pad.b}" stroke="#94a3b8" stroke-width="1"/>
+        <!-- Value line -->
+        <path d="${pathVal}" fill="none" stroke="var(--y)" stroke-width="2.5" stroke-linecap="round"/>
+        ${dotsVal}
+        <!-- Cap Rate line -->
+        <path d="${pathCR}" fill="none" stroke="${col}" stroke-width="2" stroke-dasharray="6,3" stroke-linecap="round"/>
+        ${dotsCR}
+        <!-- Legend -->
+        <rect x="${pad.l+10}" y="${pad.t+2}" width="10" height="3" rx="1" fill="var(--y)"/>
+        <text x="${pad.l+24}" y="${pad.t+6}" fill="var(--y)" font-size="8">Valor propiedad</text>
+        <line x1="${pad.l+110}" y1="${pad.t+4}" x2="${pad.l+120}" y2="${pad.t+4}" stroke="${col}" stroke-width="2" stroke-dasharray="4,2"/>
+        <text x="${pad.l+124}" y="${pad.t+6}" fill="${col}" font-size="8">Cap Rate</text>
+      </svg></div>
+
+      <div style="margin-top:.5rem;overflow-x:auto">
+        <table class="tbl" style="font-size:.7rem"><tr><th>Año</th><th>Valor propiedad</th><th>Renta neta anual</th><th>Cap Rate</th><th>Plusvalia acumulada</th></tr>`;
+
+    for(let y=0;y<=years;y+=1){
+      const pt=pts[y];
+      const plusv=pt.val-unit.list;
+      const show=y<=5||y%5===0;
+      if(show) h+=`<tr${y===0?' style="background:var(--c2)"':''}>
+        <td><b>${y}</b></td>
+        <td>${F(pt.val)}</td>
+        <td>${F(pt.rentY)}</td>
+        <td style="color:${col};font-weight:700">${(pt.capRate*100).toFixed(2)}%</td>
+        <td style="color:${plusv>=0?'var(--g)':'var(--r)'}">${plusv>=0?'+':''}${F(plusv)} (${plusv>=0?'+':''}${((plusv/unit.list)*100).toFixed(1)}%)</td>
+      </tr>`;
+    }
+
+    h+=`</table></div>
+
+      <div style="margin-top:.6rem;padding:.5rem;background:var(--c2);border-radius:6px;border-left:3px solid var(--y)">
+        <p style="font-size:.7rem;color:var(--m);line-height:1.6">
+          <b style="color:var(--t)">¿Que es el Cap Rate?</b> Es la renta neta anual dividida entre el valor actual de la propiedad. Mide el rendimiento puro de la renta sin considerar hipoteca.
+          Hoy: <b style="color:${col}">${(pts[0].capRate*100).toFixed(2)}%</b> → En 20 años: <b style="color:${col}">${(pts[years].capRate*100).toFixed(2)}%</b>.
+          La renta crece al ${PI(p.rentInfl)}/año (de ${F(pts[0].rentY)} a ${F(pts[years].rentY)}/año).
+          <br>La propiedad pasa de <b>${F(unit.list)}</b> a <b style="color:var(--g)">${F(pts[years].val)}</b> — plusvalia de <b style="color:var(--g)">+${F(pts[years].val-unit.list)}</b>.
+        </p>
+      </div>
+
+    </div></div>`;
+  }
+  $('sustainV').innerHTML=h;
+}
+
+// ============ OPPORTUNITY COST ============
+function renderOpCost(p){
+  const altR=+($('altReturn')?$('altReturn').value:10)/100;
+  if($('altReturn'))$('altReturn-v').textContent=PI(altR)+'/año';
+
+  const tM=PRE+p.mSell;
+  const tY=tM/12;
+  const altGain=Math.pow(1+altR,tY)-1; // total return of alternative over period
+
+  let h=`<div class="ctrls" style="margin-bottom:1rem">
+    <h3>Inversion alternativa</h3>
+    <div class="cg"><div class="ci"><label>Rendimiento anual alternativo (ej. acciones gringas)</label>
+      <input type="range" id="altReturn" min="0" max="25" value="${Math.round(altR*100)}" step="1" oninput="update()">
+      <span class="v" id="altReturn-v">${PI(altR)}/año</span>
+    </div></div>
+    <p style="font-size:.68rem;color:var(--m);margin-top:.4rem;line-height:1.5"><b>Logica:</b> Promo INVAL es la base (minimo capital, 0% descuento). Los demas planes piden mas capital a cambio de descuento. Ese capital extra podrias meterlo a acciones al ${PI(altR)}/año. En ${tY.toFixed(1)} años ese extra generaria ${P(altGain)}. Se lo restamos a la ganancia para ver si el descuento realmente vale la pena vs invertir ese dinero en otro lado.</p>
+  </div>`;
+
+  // Per unit table
+  for(const[uk,unit]of Object.entries(U)){
+    const col=uk==='ceiba'?'var(--ac)':'var(--ac2)';
+    const base=calc(unit,'promoINVAL',p);
+    const baseCap=base.capitalInvertido;
+
+    h+=`<div class="sec"><h2 style="color:${col}">${unit.nm}</h2>
+      <div style="overflow-x:auto"><table class="tbl">
+      <tr>
+        <th rowspan="2">Plan</th><th rowspan="2">Desc.</th><th rowspan="2">Capital preventa</th>
+        <th colspan="2" style="text-align:center;border-bottom:1px solid var(--b)">Sin costo de oportunidad</th>
+        <th colspan="4" style="text-align:center;border-bottom:1px solid var(--b);color:var(--o)">Con costo de oportunidad</th>
+      </tr>
+      <tr>
+        <th>Ganancia</th><th>ROI</th>
+        <th>Capital extra</th><th>Costo op. (${PI(altR)}/año)</th><th>Ganancia ajustada</th><th>ROI ajustado</th>
+      </tr>`;
+
+    let bestAdjRoi=-Infinity,bestAdjPk='';
+    // Pre-calc to find best
+    for(const pk of PKS){
+      const r=calc(unit,pk,p);
+      const extra=r.capitalInvertido-baseCap;
+      const oc=extra>0?extra*altGain:0;
+      const ar=r.capitalInvertido>0?(r.profit-oc)/r.capitalInvertido:0;
+      if(ar>bestAdjRoi){bestAdjRoi=ar;bestAdjPk=pk;}
+    }
+
+    for(const pk of PKS){
+      const r=calc(unit,pk,p);
+      const extra=r.capitalInvertido-baseCap;
+      const oppCost=extra>0?extra*altGain:0;
+      const adjProfit=r.profit-oppCost;
+      const adjRoi=r.capitalInvertido>0?adjProfit/r.capitalInvertido:0;
+      const isBase=pk==='promoINVAL';
+      const isBest=pk===bestAdjPk;
+
+      h+=`<tr style="${isBest?'background:rgba(22,163,74,.08)':''}">
+        <td><b>${r.pl.lb}</b></td>
+        <td style="color:var(--y)">${PI(r.pl.d)}</td>
+        <td>${F(r.capitalInvertido)}</td>
+        <td style="color:${r.profit>=0?'var(--g)':'var(--r)'}">${F(r.profit)}</td>
+        <td style="font-weight:700;color:${r.roi>=0?'var(--g)':'var(--r)'}">${P(r.roi)}</td>
+        <td style="color:${extra>0?'var(--o)':'var(--m)'}">${isBase?'— base —':F(extra)}</td>
+        <td style="color:var(--r)">${oppCost>0?'-'+F(oppCost):'$0'}</td>
+        <td style="color:${adjProfit>=0?'var(--g)':'var(--r)'}; font-weight:700">${F(adjProfit)}</td>
+        <td style="font-weight:800;color:${adjRoi>=0?'var(--g)':'var(--r)'}">${P(adjRoi)}${isBest?' ★':''}</td>
+      </tr>`;
+    }
+    h+=`</table></div></div>`;
+  }
+
+  $('opcostV').innerHTML=h;
+}
+
+// ============ TABS & UPDATE ============
+function go(t){
+  document.querySelectorAll('.tab').forEach(x=>x.classList.toggle('active',x.dataset.tab===t));
+  ['depas','deep','sustain','opcost'].forEach(id=>$(('tab-'+id)).classList.toggle('hidden',id!==t));
+}
+
+function update(){
+  const p=pr();
+  $('apprY-v').textContent=PI(p.apprY)+'/ano';
+  $('mSell-v').textContent=p.mSell+' meses';
+  $('comAgent-v').textContent=PI(p.comAgent);
+  $('isr-v').textContent=PI(p.isr);
+  $('notario-v').textContent=PI(p.notario);
+  $('hipRate-v').textContent=PI(p.hipR)+'/ano';
+  $('hipCom-v').textContent=PI(p.hipC);
+  $('rentInfl-v').textContent=PI(p.rentInfl)+'/ano';
+
+  // Show/hide hip controls
+  const hipCtrls=document.querySelectorAll('#hipRate,#hipCom');
+  hipCtrls.forEach(el=>{el.closest('.ci').style.opacity=p.cm==='hip'?1:.3});
+
+  renderPlanGuide();renderReco(p);renderSplit(p);renderWaterfall(p);renderGuide(p);renderIns(p);renderMat(p);renderBE(p);renderSustain(p);renderOpCost(p);
+}
+
+document.querySelectorAll('input[type=range],select').forEach(e=>e.addEventListener('input',update));
+update();
+</script>
+</body>
+</html>
